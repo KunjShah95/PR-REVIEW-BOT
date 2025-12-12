@@ -1,0 +1,67 @@
+# Dependencies and package management
+node_modules
+package-lock.json
+yarn.lock
+
+# Environment and secrets
+.env
+.env.*
+.codereviewrc.json
+.codereview-cache.json
+
+# Reports and output
+report.html
+report.json
+report.txt
+report.md
+coverage
+
+# Docker files
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# IDE and editor
+.idea
+.vscode
+*.swp
+*.swo
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# GitHub files
+.github
+
+# Build artifacts
+dist/*.map
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test files
+test_*.js
+verify_*.js
+integration_test_*.js
+__tests__
+*.test.js
+*.spec.js
+jest.config.js
+
+# Documentation (keep README.md)
+
+# Misc development files
+.editorconfig
+.eslintcache
+*.tmp
+tmp/
+temp/
+reports/
+cache/
