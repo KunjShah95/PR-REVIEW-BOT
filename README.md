@@ -2,13 +2,19 @@
 
 > **AI-Powered Code Guardian** — Automated code review with security scanning, dependency analysis, accessibility checks, and multi-LLM integration.
 
-[![npm version](https://img.shields.io/npm/v/sentinel-cli.svg?style=flat-square)](https://www.npmjs.com/package/sentinel-cli)
+[![npm version](https://img.shields.io/npm/v/sentinel-cli.svg?style=flat-square&color=blue)](https://www.npmjs.com/package/sentinel-cli)
+[![npm downloads](https://img.shields.io/npm/dm/sentinel-cli.svg?style=flat-square&color=green)](https://www.npmjs.com/package/sentinel-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=flat-square)](https://nodejs.org/)
-[![Docker](https://img.shields.io/badge/docker-ready-blue?style=flat-square)](https://hub.docker.com/)
+[![GitHub stars](https://img.shields.io/github/stars/KunjShah95/Sentinel-CLI?style=flat-square)](https://github.com/KunjShah95/Sentinel-CLI)
+[![GitHub issues](https://img.shields.io/github/issues/KunjShah95/Sentinel-CLI?style=flat-square)](https://github.com/KunjShah95/Sentinel-CLI/issues)
 
 <p align="center">
-  <img src="https://via.placeholder.com/800x200/0066ff/ffffff?text=SENTINEL+CLI" alt="Sentinel CLI Banner" />
+  <img src="https://raw.githubusercontent.com/KunjShah95/Sentinel-CLI/main/assets/banner.png" alt="Sentinel CLI Banner" width="800" />
+</p>
+
+<p align="center">
+  <b>🔒 Security</b> • <b>📦 Dependencies</b> • <b>♿ Accessibility</b> • <b>🐛 Bugs</b> • <b>⚡ Performance</b> • <b>🤖 AI-Powered</b>
 </p>
 
 ---
@@ -74,7 +80,7 @@ npm install --save-dev sentinel-cli
 
 ```bash
 git clone https://github.com/KunjShah95/Sentinel-CLI.git
-cd sentinel-cli
+cd Sentinel-CLI
 npm install
 npm link
 ```
@@ -498,7 +504,16 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-## 🙏 Acknowledgments
+## �‍💻 Author
+
+**Kunj Shah**
+
+- GitHub: [@KunjShah95](https://github.com/KunjShah95)
+- npm: [kunjshah](https://www.npmjs.com/~kunjshah)
+
+---
+
+## �🙏 Acknowledgments
 
 - [Commander.js](https://github.com/tj/commander.js) - CLI framework
 - [Chalk](https://github.com/chalk/chalk) - Terminal styling
@@ -509,5 +524,14 @@ MIT License - see [LICENSE](LICENSE) for details.
 ---
 
 <p align="center">
-  Made with ❤️ by the Sentinel Team
+  Made with ❤️ by <a href="https://github.com/KunjShah95">Kunj Shah</a>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/sentinel-cli">
+    <img src="https://img.shields.io/npm/v/sentinel-cli?style=for-the-badge&logo=npm" alt="npm" />
+  </a>
+  <a href="https://github.com/KunjShah95/Sentinel-CLI">
+    <img src="https://img.shields.io/github/stars/KunjShah95/Sentinel-CLI?style=for-the-badge&logo=github" alt="GitHub stars" />
+  </a>
 </p>

@@ -1,6 +1,6 @@
 {
-  "name": "@kunjshah95/sentinel-cli",
-  "version": "1.1.0",
+  "name": "sentinel-cli",
+  "version": "1.2.0",
   "description": "Sentinel - AI-Powered Code Guardian: Automated code review with security scanning, dependency analysis, accessibility checks, and multi-LLM integration",
   "main": "src/index.js",
   "type": "module",
