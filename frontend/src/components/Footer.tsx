@@ -28,7 +28,7 @@ export function Footer() {
                 <Twitter className="w-5 h-5" />
               </a>
               <a
-                href="https://github.com/KunjShah95"
+                href="https://github.com/KunjShah95/SENTINEL-CLI"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
@@ -107,7 +107,9 @@ export function Footer() {
             <ul className="space-y-4 text-gray-400 text-sm">
               <li>
                 <a
-                  href="https://github.com/sentinel-cli"
+                  href="https://github.com/KunjShah95/SENTINEL-CLI"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="hover:text-emerald-400 transition-colors flex items-center gap-2"
                 >
                   <Github className="w-4 h-4" /> GitHub
@@ -134,7 +136,6 @@ export function Footer() {
 
         <div className="pt-8 border-t border-gray-900 flex flex-col md:flex-row justify-between items-center gap-6 text-gray-500 text-xs">
           <p>© 2025 SENTINEL-CLI. Built with love for the open source community.</p>
-WARN! Due to `builds` existing in your configuration file, the Build and Development Settings defined in your Project Settings will not apply. Learn More: https://vercel.link/unused-build-settings
           <div className="flex gap-8">
             <span>MIT License</span>
             <span>v2.0.4</span>
