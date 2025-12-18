@@ -8,9 +8,9 @@
       "config": { "distDir": "build" }
     }
   ],
+  "outputDirectory": "frontend/build",
   "routes": [
     { "handle": "filesystem" },
-  "outputDirectory": "build",
-    { "src": "\/(.*)", "dest": "build/index.html" }
+    { "src": "\/(.*)", "dest": "frontend/build/index.html" }
   ]
 }
