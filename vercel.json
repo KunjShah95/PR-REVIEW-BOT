@@ -1,6 +1,7 @@
 {
   "version": 2,
   "name": "sentinel-cli-website",
+  "outputDirectory": "frontend/build",
   "builds": [
     {
       "src": "frontend/package.json",
@@ -10,6 +11,6 @@
   ],
   "routes": [
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "frontend/index.html" }
+    { "src": "\/(.*)", "dest": "frontend/build/index.html" }
   ]
 }
