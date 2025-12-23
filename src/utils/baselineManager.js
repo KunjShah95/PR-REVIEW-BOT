@@ -36,8 +36,8 @@ export class BaselineManager {
       hash: this.generateBaselineHash(issues),
       metadata: {
         totalIssues: issues.length,
-        analyzerVersion: options.analyzerVersion || '1.3.0',
-        sentinelVersion: options.sentinelVersion || '1.3.0',
+        analyzerVersion: options.analyzerVersion || '1.5.0',
+        sentinelVersion: options.sentinelVersion || '1.5.0',
         description: options.description || '',
         author: options.author || '',
       },
@@ -52,7 +52,7 @@ export class BaselineManager {
     }
 
     await fs.writeFile(this.baselineFile, JSON.stringify(baseline, null, 2));
-    
+
     return {
       success: true,
       baselineFile: this.baselineFile,
@@ -94,7 +94,7 @@ export class BaselineManager {
    */
   async filterNewIssues(issues) {
     const baseline = await this.loadBaseline();
-    
+
     if (!baseline) {
       return {
         newIssues: issues,
@@ -106,7 +106,7 @@ export class BaselineManager {
     }
 
     const baselineIssues = new Map();
-    
+
     // Index baseline issues for quick lookup
     for (const baselineIssue of baseline.issues) {
       const key = this.generateIssueKey(baselineIssue);
@@ -158,7 +158,7 @@ export class BaselineManager {
    */
   async updateBaseline(issues, options = {}) {
     const baseline = await this.loadBaseline();
-    
+
     if (!baseline) {
       return await this.createBaseline(issues, options);
     }
@@ -220,7 +220,7 @@ export class BaselineManager {
       type: issue.type,
       message: issue.message?.substring(0, 100), // First 100 chars
     };
-    
+
     const keyString = JSON.stringify(keyData);
     return crypto.createHash('sha256').update(keyString).digest('hex').substring(0, 16);
   }
@@ -232,7 +232,7 @@ export class BaselineManager {
     const sortedIssues = issues
       .map(issue => this.generateIssueKey(issue))
       .sort();
-    
+
     const baselineString = JSON.stringify(sortedIssues);
     return crypto.createHash('sha256').update(baselineString).digest('hex');
   }
@@ -262,7 +262,7 @@ export class BaselineManager {
    */
   async getBaselineStats() {
     const baseline = await this.loadBaseline();
-    
+
     if (!baseline) {
       return {
         exists: false,
@@ -284,13 +284,13 @@ export class BaselineManager {
     for (const issue of baseline.issues) {
       // By severity
       stats.issuesBySeverity[issue.severity] = (stats.issuesBySeverity[issue.severity] || 0) + 1;
-      
+
       // By analyzer
       stats.issuesByAnalyzer[issue.analyzer] = (stats.issuesByAnalyzer[issue.analyzer] || 0) + 1;
-      
+
       // By file
       stats.issuesByFile[issue.file] = (stats.issuesByFile[issue.file] || 0) + 1;
-      
+
       // Track oldest/newest
       const firstSeen = new Date(issue.firstSeen);
       if (!stats.oldestIssue || firstSeen < stats.oldestIssue) {
@@ -345,7 +345,7 @@ export class BaselineManager {
    */
   async exportBaseline(format = 'json', outputPath) {
     const baseline = await this.loadBaseline();
-    
+
     if (!baseline) {
       throw new Error('No baseline found to export');
     }
@@ -358,26 +358,26 @@ export class BaselineManager {
         content = JSON.stringify(baseline, null, 2);
         extension = '.json';
         break;
-      
+
       case 'csv':
         content = this.exportToCSV(baseline.issues);
         extension = '.csv';
         break;
-      
+
       case 'markdown':
         content = this.exportToMarkdown(baseline);
         extension = '.md';
         break;
-      
+
       default:
         throw new Error(`Unsupported export format: ${format}`);
     }
 
     const defaultPath = path.join(this.configDir, `baseline-export${extension}`);
     const finalPath = outputPath || defaultPath;
-    
+
     await fs.writeFile(finalPath, content);
-    
+
     return {
       success: true,
       outputPath: finalPath,
@@ -422,7 +422,7 @@ export class BaselineManager {
 
     for (const [severity, issues] of Object.entries(bySeverity)) {
       markdown += `## ${severity.toUpperCase()} Issues (${issues.length})\n\n`;
-      
+
       for (const issue of issues) {
         markdown += `### ${issue.title}\n\n`;
         markdown += `- **File:** \`${issue.file}:${issue.line}\`\n`;

@@ -73,7 +73,7 @@ export class SBOMGenerator {
             vulnerabilities,
             metadata: {
                 generatedAt: new Date().toISOString(),
-                generator: 'Sentinel CLI v1.3.0',
+                generator: 'Sentinel CLI v1.5.0',
                 format,
             },
         });
@@ -566,7 +566,7 @@ export class SBOMGenerator {
     validateUrl(url) {
         try {
             const parsedUrl = new URL(url);
-            
+
             // Block private IP ranges and localhost
             const hostname = parsedUrl.hostname;
             if (
@@ -579,12 +579,12 @@ export class SBOMGenerator {
             ) {
                 throw new Error('Access to private IP ranges is not allowed');
             }
-            
+
             // Only allow HTTP/HTTPS
             if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
                 throw new Error('Only HTTP/HTTPS protocols are allowed');
             }
-            
+
             return true;
         } catch (error) {
             throw new Error(`Invalid URL: ${error.message}`);
@@ -600,7 +600,7 @@ export class SBOMGenerator {
             if (!/^[a-zA-Z0-9._@/-]+$/.test(dependency.name)) {
                 throw new Error('Invalid dependency name');
             }
-            
+
             const { stdout } = await exec(`npm view ${dependency.name} --json`, { timeout: 10000 });
             let info = null;
             try {
@@ -633,7 +633,7 @@ export class SBOMGenerator {
             if (!/^[a-zA-Z0-9._-]+$/.test(dependency.name)) {
                 throw new Error('Invalid dependency name');
             }
-            
+
             const { stdout } = await exec(`pip show ${dependency.name}`, { timeout: 10000 });
             const lines = stdout.split('\n');
 
@@ -670,7 +670,7 @@ export class SBOMGenerator {
             if (!/^[a-zA-Z0-9._-]+$/.test(dependency.name)) {
                 throw new Error('Invalid dependency name');
             }
-            
+
             const { stdout } = await exec(`cargo search ${dependency.name} --limit 1`, { timeout: 10000 });
             const lines = stdout.split('\n');
 
@@ -706,7 +706,7 @@ export class SBOMGenerator {
             if (!/^[a-zA-Z0-9._/-]+$/.test(dependency.name)) {
                 throw new Error('Invalid dependency name');
             }
-            
+
             const { stdout } = await exec(`go list -m -json ${dependency.name}`, { timeout: 10000 });
             const info = JSON.parse(stdout);
 

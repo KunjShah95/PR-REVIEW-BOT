@@ -634,7 +634,7 @@ export class EnhancedPRReviewer {
 
     // Add footer
     body += '\n---\n';
-    body += `*Analyzed by Sentinel v1.3.0* | `;
+    body += `*Analyzed by Sentinel v1.5.0* | `;
 
     return body;
   }
@@ -665,7 +665,7 @@ export class EnhancedPRReviewer {
       analysis,
       metadata: {
         reviewer: 'sentinel-bot',
-        version: '1.3.0',
+        version: '1.4.1',
         timestamp: new Date().toISOString(),
         issueCount: comments.reduce((sum, c) => sum + c.issueCount, 0),
       },

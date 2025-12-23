@@ -578,7 +578,7 @@ docker build -t sentinel-cli .
 docker build -f Dockerfile.dev -t sentinel-dev .
 
 # Build with specific tag
-docker build -t sentinel-cli:v1.3.0 .
+docker build -t sentinel-cli:v1.4.0 .
 ```
 
 ### Running Containers

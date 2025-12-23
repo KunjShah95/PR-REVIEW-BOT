@@ -7,11 +7,11 @@
 import fs from 'fs';
 import glob from 'glob';
 import { fileURLToPath } from 'url';
-import path from 'path';
+
 import { runDebugCycle } from './multi_agent_debugger.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
 
 export async function processFile(filePath) {
   const code = fs.readFileSync(filePath, 'utf8');

@@ -17,7 +17,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
     this.websocketConnections = new Map();
     this.updateInterval = null;
     this.lastUpdate = null;
-    
+
     // Real-time feed configurations
     this.realTimeFeeds = {
       github: {
@@ -37,7 +37,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
         lastModified: null,
       }
     };
-    
+
     // Ecosystem-specific package databases
     this.packageEcosystems = {
       npm: {
@@ -47,7 +47,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
       },
       pypi: {
         registry: 'https://pypi.org/pypi',
-        advisoryDb: 'pypi', 
+        advisoryDb: 'pypi',
         packages: new Set()
       },
       maven: {
@@ -70,10 +70,10 @@ export class CVEDatabaseIntegration extends EventEmitter {
     try {
       // Load cached CVE data
       await this.loadCache();
-      
+
       // Test GitHub API connectivity
       await this.testConnectivity();
-      
+
       console.log('✅ CVE Database integration initialized');
     } catch (error) {
       console.warn('⚠️ CVE Database integration warning:', error.message);
@@ -88,12 +88,12 @@ export class CVEDatabaseIntegration extends EventEmitter {
       // Test GitHub Advisory API
       await rateLimiter.schedule(() => axios.get(`${this.githubAdvisoryUrl}/database`, {
         headers: {
-          'User-Agent': 'Sentinel-CLI/1.3.0',
+          'User-Agent': 'Sentinel-CLI/1.5.0',
           'Accept': 'application/vnd.github+json'
         },
         timeout: 10000
       }));
-      
+
       console.log('🔗 GitHub Advisory Database: Connected');
     } catch (error) {
       console.warn('⚠️ GitHub Advisory API unavailable, using cached data');
@@ -106,18 +106,18 @@ export class CVEDatabaseIntegration extends EventEmitter {
   async loadCache() {
     try {
       const cachePath = path.join(process.cwd(), '.sentinel-cache', 'cve-cache.json');
-      
+
       try {
         const data = await fs.readFile(cachePath, 'utf8');
         const cacheData = JSON.parse(data);
-        
+
         for (const [key, value] of Object.entries(cacheData)) {
           this.cache.set(key, {
             ...value,
             timestamp: new Date(value.timestamp)
           });
         }
-        
+
         console.log(`📚 Loaded ${this.cache.size} cached CVE entries`);
       } catch (error) {
         // No cache file exists, that's okay
@@ -134,17 +134,17 @@ export class CVEDatabaseIntegration extends EventEmitter {
     try {
       const cacheDir = path.join(process.cwd(), '.sentinel-cache');
       await fs.mkdir(cacheDir, { recursive: true });
-      
+
       const cachePath = path.join(cacheDir, 'cve-cache.json');
       const cacheData = {};
-      
+
       for (const [key, value] of this.cache.entries()) {
         cacheData[key] = {
           ...value,
           timestamp: value.timestamp.toISOString()
         };
       }
-      
+
       await fs.writeFile(cachePath, JSON.stringify(cacheData, null, 2));
     } catch (error) {
       console.warn('⚠️ Could not save CVE cache:', error.message);
@@ -157,7 +157,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
   async scanDependencies(dependencies, ecosystem = 'npm') {
     const results = [];
     const ecosystemConfig = this.packageEcosystems[ecosystem];
-    
+
     if (!ecosystemConfig) {
       console.warn(`⚠️ Unsupported ecosystem: ${ecosystem}`);
       return results;
@@ -168,7 +168,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
     for (const [packageName, version] of Object.entries(dependencies)) {
       try {
         const vulnerabilities = await this.checkPackageVulnerabilities(packageName, version, ecosystem);
-        
+
         if (vulnerabilities.length > 0) {
           results.push({
             package: packageName,
@@ -190,7 +190,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
    */
   async checkPackageVulnerabilities(packageName, version, ecosystem) {
     const cacheKey = `${ecosystem}:${packageName}:${version}`;
-    
+
     // Check cache first
     if (this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey);
@@ -202,7 +202,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
     try {
       // Query GitHub Advisory Database
       const vulnerabilities = await this.queryGitHubAdvisory(packageName, version, ecosystem);
-      
+
       // Cache the result
       this.cache.set(cacheKey, {
         vulnerabilities,
@@ -221,7 +221,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
    */
   async queryGitHubAdvisory(packageName, version, ecosystem) {
     const vulnerabilities = [];
-    
+
     try {
       // Query GitHub Security Advisories API
       const response = await rateLimiter.schedule(() => axios.get(`${this.githubAdvisoryUrl}`, {
@@ -232,7 +232,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
           per_page: 100
         },
         headers: {
-          'User-Agent': 'Sentinel-CLI/1.3.0',
+          'User-Agent': 'Sentinel-CLI/1.4.1',
           'Accept': 'application/vnd.github+json'
         },
         timeout: 15000
@@ -241,7 +241,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
       if (response.data && response.data.length > 0) {
         for (const advisory of response.data) {
           const affectedVersions = this.parseAffectedVersions(advisory, packageName, version);
-          
+
           if (affectedVersions.isAffected) {
             vulnerabilities.push({
               cveId: advisory.cve_id || 'N/A',
@@ -275,10 +275,10 @@ export class CVEDatabaseIntegration extends EventEmitter {
   parseAffectedVersions(advisory, packageName, targetVersion) {
     try {
       const ranges = advisory.vulnerable_version_range || '';
-      
+
       // Simple version comparison (could be enhanced with semver library)
       const isAffected = this.versionInRange(targetVersion, ranges);
-      
+
       return {
         isAffected,
         versions: [targetVersion]
@@ -296,16 +296,16 @@ export class CVEDatabaseIntegration extends EventEmitter {
    */
   versionInRange(version, range) {
     if (!range) return false;
-    
+
     // Simple range parsing - could be enhanced
     const ranges = range.split(',').map(r => r.trim());
-    
+
     for (const rangePart of ranges) {
       if (this.satisfiesVersion(version, rangePart)) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -318,27 +318,27 @@ export class CVEDatabaseIntegration extends EventEmitter {
       const minVersion = range.slice(2);
       return this.compareVersions(version, minVersion) >= 0;
     }
-    
+
     if (range.startsWith('<=')) {
       const maxVersion = range.slice(2);
       return this.compareVersions(version, maxVersion) <= 0;
     }
-    
+
     if (range.startsWith('>')) {
       const minVersion = range.slice(1);
       return this.compareVersions(version, minVersion) > 0;
     }
-    
+
     if (range.startsWith('<')) {
       const maxVersion = range.slice(1);
       return this.compareVersions(version, maxVersion) < 0;
     }
-    
+
     if (range.startsWith('=')) {
       const exactVersion = range.slice(1);
       return version === exactVersion;
     }
-    
+
     // Exact match if no operator
     return version === range;
   }
@@ -348,18 +348,18 @@ export class CVEDatabaseIntegration extends EventEmitter {
    */
   compareVersions(v1, v2) {
     const parseVersion = (v) => v.split('.').map(Number);
-    
+
     const parts1 = parseVersion(v1);
     const parts2 = parseVersion(v2);
-    
+
     for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
       const part1 = parts1[i] || 0;
       const part2 = parts2[i] || 0;
-      
+
       if (part1 < part2) return -1;
       if (part1 > part2) return 1;
     }
-    
+
     return 0;
   }
 
@@ -369,11 +369,11 @@ export class CVEDatabaseIntegration extends EventEmitter {
   normalizeSeverity(severity) {
     const severityMap = {
       'CRITICAL': 'critical',
-      'HIGH': 'high', 
+      'HIGH': 'high',
       'MODERATE': 'medium',
       'LOW': 'low'
     };
-    
+
     return severityMap[severity?.toUpperCase()] || 'medium';
   }
 
@@ -383,7 +383,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
   getFallbackVulnerabilities(packageName, version, ecosystem) {
     const knownVulns = this.getKnownVulnerabilities();
     const vulnerabilities = [];
-    
+
     const packageVulns = knownVulns[ecosystem]?.[packageName];
     if (packageVulns) {
       for (const vuln of packageVulns) {
@@ -401,7 +401,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
         }
       }
     }
-    
+
     return vulnerabilities;
   }
 
@@ -507,7 +507,7 @@ export class CVEDatabaseIntegration extends EventEmitter {
    */
   async enableRealTimeMonitoring(options = {}) {
     this.realTimeEnabled = true;
-    
+
     // Configure feeds
     if (options.github) {
       this.realTimeFeeds.github = { ...this.realTimeFeeds.github, ...options.github };
@@ -518,10 +518,10 @@ export class CVEDatabaseIntegration extends EventEmitter {
     if (options.osv) {
       this.realTimeFeeds.osv = { ...this.realTimeFeeds.osv, ...options.osv };
     }
-    
+
     // Start monitoring feeds
     await this.startRealTimeFeeds();
-    
+
     console.log('🔄 Real-time CVE monitoring enabled');
   }
 
@@ -533,12 +533,12 @@ export class CVEDatabaseIntegration extends EventEmitter {
     if (this.realTimeFeeds.nvd.enabled) {
       this.startNVDPolling();
     }
-    
+
     // Start OSV polling
     if (this.realTimeFeeds.osv.enabled) {
       this.startOSVPolling();
     }
-    
+
     // Setup GitHub webhook if configured
     if (this.realTimeFeeds.github.enabled && this.realTimeFeeds.github.webhookUrl) {
       this.setupGitHubWebhook();
@@ -553,26 +553,26 @@ export class CVEDatabaseIntegration extends EventEmitter {
       try {
         const since = this.realTimeFeeds.nvd.lastModified || this.getLastWeek();
         const vulnerabilities = await this.fetchNVDCVEs(since);
-        
+
         if (vulnerabilities.length > 0) {
           this.emit('new-vulnerabilities', {
             source: 'nvd',
             vulnerabilities,
             timestamp: new Date().toISOString(),
           });
-          
+
           console.log(`🚨 NVD: Found ${vulnerabilities.length} new vulnerabilities`);
         }
-        
+
         this.realTimeFeeds.nvd.lastModified = new Date().toISOString();
       } catch (error) {
         console.warn('⚠️ NVD polling failed:', error.message);
       }
     };
-    
+
     // Initial poll
     poll();
-    
+
     // Set up recurring poll
     this.updateInterval = setInterval(poll, this.realTimeFeeds.nvd.pollInterval);
   }
@@ -585,26 +585,26 @@ export class CVEDatabaseIntegration extends EventEmitter {
       try {
         const since = this.realTimeFeeds.osv.lastModified || this.getLastWeek();
         const vulnerabilities = await this.fetchOSVCVEs(since);
-        
+
         if (vulnerabilities.length > 0) {
           this.emit('new-vulnerabilities', {
             source: 'osv',
             vulnerabilities,
             timestamp: new Date().toISOString(),
           });
-          
+
           console.log(`🚨 OSV: Found ${vulnerabilities.length} new vulnerabilities`);
         }
-        
+
         this.realTimeFeeds.osv.lastModified = new Date().toISOString();
       } catch (error) {
         console.warn('⚠️ OSV polling failed:', error.message);
       }
     };
-    
+
     // Initial poll
     poll();
-    
+
     // Set up recurring poll
     this.updateInterval = setInterval(poll, this.realTimeFeeds.osv.pollInterval);
   }
@@ -618,19 +618,19 @@ export class CVEDatabaseIntegration extends EventEmitter {
       lastModEndDate: new Date().toISOString().split('T')[0],
       resultsPerPage: 2000,
     };
-    
+
     if (this.realTimeFeeds.nvd.apiKey) {
       params.apiKey = this.realTimeFeeds.nvd.apiKey;
     }
-    
+
     const response = await rateLimiter.schedule(() => axios.get(this.nvdUrl, {
       params,
       headers: {
-        'User-Agent': 'Sentinel-CLI/1.3.0',
+        'User-Agent': 'Sentinel-CLI/1.4.1',
       },
       timeout: 30000,
     }));
-    
+
     return response.data.vulnerabilities || [];
   }
 
@@ -647,11 +647,11 @@ export class CVEDatabaseIntegration extends EventEmitter {
       limit: 1000,
     }, {
       headers: {
-        'User-Agent': 'Sentinel-CLI/1.3.0',
+        'User-Agent': 'Sentinel-CLI/1.4.1',
       },
       timeout: 30000,
     }));
-    
+
     return response.data.vulns || [];
   }
 
@@ -670,13 +670,13 @@ export class CVEDatabaseIntegration extends EventEmitter {
   async processGitHubWebhook(payload) {
     if (payload.action === 'published' && payload.advisory) {
       const advisory = payload.advisory;
-      
+
       this.emit('new-vulnerabilities', {
         source: 'github',
         vulnerabilities: [this.formatGitHubAdvisory(advisory)],
         timestamp: new Date().toISOString(),
       });
-      
+
       console.log(`🚨 GitHub: New advisory - ${advisory.summary}`);
     }
   }
@@ -715,18 +715,18 @@ export class CVEDatabaseIntegration extends EventEmitter {
    */
   async stopRealTimeMonitoring() {
     this.realTimeEnabled = false;
-    
+
     if (this.updateInterval) {
       clearInterval(this.updateInterval);
       this.updateInterval = null;
     }
-    
+
     // Close WebSocket connections
     for (const ws of this.websocketConnections.values()) {
       ws.close();
     }
     this.websocketConnections.clear();
-    
+
     console.log('⏹️ Real-time CVE monitoring stopped');
   }
 
@@ -747,10 +747,10 @@ export class CVEDatabaseIntegration extends EventEmitter {
    */
   subscribeToPattern(pattern, callback) {
     const listener = (data) => {
-      const matchingVulns = data.vulnerabilities.filter(vuln => 
+      const matchingVulns = data.vulnerabilities.filter(vuln =>
         this.matchesPattern(vuln, pattern)
       );
-      
+
       if (matchingVulns.length > 0) {
         callback({
           ...data,
@@ -758,9 +758,9 @@ export class CVEDatabaseIntegration extends EventEmitter {
         });
       }
     };
-    
+
     this.on('new-vulnerabilities', listener);
-    
+
     return () => {
       this.off('new-vulnerabilities', listener);
     };
@@ -771,23 +771,23 @@ export class CVEDatabaseIntegration extends EventEmitter {
    */
   matchesPattern(vulnerability, pattern) {
     const { ecosystem, package: packageName, severity, cveId } = pattern;
-    
+
     if (ecosystem && vulnerability.ecosystem !== ecosystem) {
       return false;
     }
-    
+
     if (packageName && !vulnerability.summary?.includes(packageName)) {
       return false;
     }
-    
+
     if (severity && vulnerability.severity !== severity) {
       return false;
     }
-    
+
     if (cveId && vulnerability.cveId !== cveId) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -821,14 +821,14 @@ export class CVEDatabaseIntegration extends EventEmitter {
   cleanupCache() {
     const now = Date.now();
     let cleaned = 0;
-    
+
     for (const [key, value] of this.cache.entries()) {
       if (now - value.timestamp.getTime() > this.cacheExpiry) {
         this.cache.delete(key);
         cleaned++;
       }
     }
-    
+
     if (cleaned > 0) {
       console.log(`🧹 Cleaned ${cleaned} expired cache entries`);
       this.saveCache();

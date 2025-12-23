@@ -111,7 +111,7 @@ program
   • GitHub PR integration
   • Slack/Discord notifications
   • SARIF output for GitHub Security`)
-  .version('1.3.0')
+  .version('1.5.0')
   .option('--banner-message <text>', 'Banner text', 'SENTINEL')
   .option('--banner-font <name>', 'Figlet font name', 'Standard')
   .option('--banner-gradient <name>', 'Banner gradient: aqua|fire|rainbow|aurora|mono', 'aqua')
