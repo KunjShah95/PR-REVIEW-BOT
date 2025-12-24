@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { promises as fs } from 'fs';
 import path from 'path';
+import os from 'os';
 
 import Config from './config/config.js';
 import GitUtils from './git/gitUtils.js';
@@ -171,12 +172,12 @@ export class CodeReviewBot {
             const absolutePath = path.resolve(filePath);
             const workspaceRoot = process.cwd();
             const relativePath = path.relative(workspaceRoot, absolutePath);
-            
+
             if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
               console.warn(chalk.yellow('⚠') + ` Skipping file outside workspace: ${filePath}`);
               continue;
             }
-            
+
             const content = await fs.readFile(absolutePath, 'utf8');
             files.push({
               path: relativePath, // Use relative path for reporting
@@ -495,34 +496,98 @@ export class CodeReviewBot {
           ],
           default: 'openai',
         },
+        {
+          type: 'password',
+          name: 'apiKey',
+          message: 'Enter your API Key (hidden):',
+          mask: '*',
+        },
       ];
       aiSettings = await inquirer.prompt(aiQuestions);
 
-      // Security reminder about API keys
-      console.log('');
-      console.log(chalk.yellow('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
-      console.log(chalk.yellow.bold('⚠️  IMPORTANT: Store your API key in a .env file!'));
-      console.log(chalk.yellow('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
-      console.log('');
-      console.log(chalk.white('  1. Copy .env.example to .env:'));
-      console.log(chalk.cyan('     cp .env.example .env'));
-      console.log('');
-      console.log(
-        chalk.white(`  2. Add your ${aiSettings.provider.toUpperCase()} API key to the .env file:`)
-      );
+      // Ask for storage preference
+      const { storageScope } = await inquirer.prompt([{
+        type: 'list',
+        name: 'storageScope',
+        message: 'Where should we save your API key?',
+        choices: [
+          { name: 'Local Project (.env in current folder)', value: 'local' },
+          { name: 'Global Configuration (~/.sentinel/.env)', value: 'global' }
+        ],
+        default: 'local'
+      }]);
 
-      const envVarMap = {
-        openai: 'OPENAI_API_KEY',
-        anthropic: 'ANTHROPIC_API_KEY',
-        gemini: 'GEMINI_API_KEY',
-        groq: 'GROQ_API_KEY',
-        openrouter: 'OPENROUTER_API_KEY',
-      };
-      console.log(chalk.cyan(`     ${envVarMap[aiSettings.provider]}=your-api-key-here`));
-      console.log('');
-      console.log(chalk.red.bold('  ❌ NEVER hardcode API keys in your source code!'));
-      console.log(chalk.green.bold('  ✅ Always use environment variables from .env files.'));
-      console.log('');
+      // Automate .env creation
+      if (aiSettings.apiKey) {
+        const envVarMap = {
+          openai: 'OPENAI_API_KEY',
+          anthropic: 'ANTHROPIC_API_KEY',
+          gemini: 'GEMINI_API_KEY',
+          groq: 'GROQ_API_KEY',
+          openrouter: 'OPENROUTER_API_KEY',
+        };
+        const envKey = envVarMap[aiSettings.provider];
+        const envContent = `\n${envKey}=${aiSettings.apiKey}\n`;
+
+        let envPath;
+        if (storageScope === 'global') {
+          const homeDir = os.homedir();
+          const configDir = path.join(homeDir, '.sentinel');
+          // Ensure dir exists
+          try {
+            await fs.mkdir(configDir, { recursive: true });
+          } catch (e) {
+            console.warn(chalk.yellow('⚠ Failed to create config directory:'), e.message);
+          }
+          envPath = path.join(configDir, '.env');
+        } else {
+          envPath = path.resolve(process.cwd(), '.env');
+        }
+
+        try {
+          // Append or Write with restricted permissions (0o600)
+          try {
+            await fs.appendFile(envPath, envContent, { mode: 0o600 });
+          } catch (appendError) {
+            // If file doesn't exist or other error, try writing new
+            await fs.writeFile(envPath, envContent, { mode: 0o600 });
+          }
+
+          // Double check permissions (especially for existing files where append might not change mode)
+          try { await fs.chmod(envPath, 0o600); } catch (e) { /* ignore windows/fs errors */ }
+
+          console.log(chalk.green('✓') + ` API Key for ${aiSettings.provider} saved to ${storageScope} .env file`);
+          if (storageScope === 'global') {
+            console.log(chalk.gray(`  (File path: ${envPath})`));
+            console.log(chalk.gray(`  (Permissions set to 600 - Read/Write by owner only)`));
+          }
+
+        } catch (error) {
+          console.error(chalk.red('✗') + ` Failed to save API Key: ${error.message}`);
+        }
+
+        // Ensure .env is in .gitignore (ONLY IF LOCAL)
+        if (storageScope === 'local') {
+          try {
+            const gitignorePath = path.resolve(process.cwd(), '.gitignore');
+            let gitignoreContent = '';
+            try {
+              gitignoreContent = await fs.readFile(gitignorePath, 'utf8');
+            } catch (ignored) {
+              // if file doesn't exist, we'll create it
+            }
+
+            if (!gitignoreContent.includes('.env')) {
+              await fs.appendFile(gitignorePath, '\n.env\n');
+              console.log(chalk.green('✓') + ' Added .env to .gitignore');
+            }
+          } catch (gitErr) {
+            // Ignore gitignore errors
+          }
+        }
+      } else {
+        console.log(chalk.yellow('⚠ No API key provided. You will need to set it manually.'));
+      }
     }
 
     // Update configuration

@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import os from 'os';
 
 /**
  * Environment Loader for Sentinel CLI
@@ -13,34 +14,59 @@ export class EnvLoader {
     }
 
     /**
-     * Load .env file from project root
+     * Load .env file from project root or global home directory
      */
     async loadEnvFile() {
         if (this.loaded) return;
 
-        const envPath = path.join(process.cwd(), '.env');
+        const localEnvPath = path.join(process.cwd(), '.env');
+        const globalEnvPath = path.join(os.homedir(), '.sentinel', '.env');
 
+        let loadedAny = false;
+
+        // 1. Try Local First (Highest Priority for file-based config)
         try {
-            const envContent = await fs.readFile(envPath, 'utf8');
-            const envVars = this.parseEnvContent(envContent);
-
-            // Set environment variables
-            Object.entries(envVars).forEach(([key, value]) => {
-                if (!process.env[key]) {
-                    process.env[key] = value === 'undefined' ? '' : value;
-                }
-            });
-
-            this.loaded = true;
+            const localContent = await fs.readFile(localEnvPath, 'utf8');
+            this.applyEnvVars(this.parseEnvContent(localContent));
+            loadedAny = true;
             console.log('✅ Loaded environment variables from .env file');
         } catch (error) {
-            if (error.code === 'ENOENT') {
-                console.log('ℹ️  No .env file found - using system environment variables');
-            } else {
-                console.warn('⚠️  Failed to load .env file:', error.message);
+            if (error.code !== 'ENOENT') {
+                console.warn('⚠️  Failed to load local .env file:', error.message);
             }
-            this.loaded = true;
         }
+
+        // 2. Try Global (Fallback)
+        try {
+            const globalContent = await fs.readFile(globalEnvPath, 'utf8');
+            this.applyEnvVars(this.parseEnvContent(globalContent));
+            if (!loadedAny) {
+                // only log if we didn't load local, to avoid noise
+                // or maybe we want to know global loaded too? 
+                // If local loaded, global vars only fill gaps.
+                // Let's just log if we loaded something new or if it's the primary source.
+            }
+            loadedAny = true;
+        } catch (error) {
+            // Ignore missing global config
+        }
+
+        if (!loadedAny) {
+            console.log('ℹ️  No .env file found (checked local and global ~/.sentinel/) - using system environment variables');
+        }
+
+        this.loaded = true;
+    }
+
+    applyEnvVars(envVars) {
+        Object.entries(envVars).forEach(([key, value]) => {
+            // Only set if not already set (preserve system env vars)
+            // Or should we overwrite? Usually .env overwrites defaults but not system vars passed explicitly?
+            // Standard dotenv behavior: don't overwrite existing process.env
+            if (!process.env[key]) {
+                process.env[key] = value === 'undefined' ? '' : value;
+            }
+        });
     }
 
     /**

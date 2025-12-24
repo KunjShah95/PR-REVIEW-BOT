@@ -159,7 +159,15 @@ Summary: 1 critical, 2 high, 5 medium, 12 low issues found
 
 ## 🔧 Configuration Examples
 
-### Using Different AI Providers
+### Automated Setup (Recommended)
+Run the interactive setup wizard to configure your AI providers and settings. This will automatically manage your keys securely (stored locally or globally).
+
+```bash
+sentinel setup
+```
+
+### Manual Configuration
+If you prefer setting environment variables manually (e.g., in CI/CD pipelines):
 
 **OpenAI (GPT-4o-mini):**
 
